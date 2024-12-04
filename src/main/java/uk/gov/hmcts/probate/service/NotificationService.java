@@ -418,14 +418,15 @@ public class NotificationService {
 
     private Document getGeneratedDocument(TemplatePreview response, String emailAddress,
                                           DocumentType docType) {
+        final String previewHtml = response.getHtml().orElseThrow();
+        final String previewXhtml = pdfManagementService.rerenderAsXhtml(previewHtml);
         SentEmail sentEmail = SentEmail.builder()
                 .sentOn(LocalDateTime.now().format(formatter))
                 .to(emailAddress)
                 .subject(response.getSubject().orElse(""))
-                .body(response.getBody())
+                .body(previewXhtml)
                 .build();
-        Map<String, Object> placeholders = sentEmailPersonalisationService.getPersonalisation(sentEmail);
-        return pdfManagementService.generateDocmosisDocumentAndUpload(placeholders, docType);
+        return pdfManagementService.generateAndUpload(sentEmail, docType);
     }
 
     public void startGrantDelayNotificationPeriod(CaseDetails caseDetails) {
